@@ -26,27 +26,75 @@ export const usePhotoGallery = () => {
 	const { get, set } = useStorage();
 
 	useEffect(() => {
+		// On mobile, we can directly point to each photo file on
+		// the Filesystem and display them automatically.
+		// On the web, however, we must read each image from the
+		// Filesystem into base64 format, using a new base64 property on the Photo object
 		const loadSaved = async () => {
 			const photosString = await get('photos');
-			const photos = (photosString ? JSON.parse(photosString) : []) as Photo[];
-			for (let photo of photos) {
-				const file = await readFile({
-					path: photo.filepath,
-					directory: FilesystemDirectory.Data,
-				});
-
-				// On web, we must read each image from the Filesystem
-				// into base64 format, using a new base64 property on the Photo object
-				photo.base64 = `data:image/jpeg;base64,${file.data}`;
+			const photosInStorage = (photosString ? JSON.parse(photosString) : []) as Photo[];
+			// If running on the web...
+			if (!isPlatform('hybrid')) {
+				for (let photo of photosInStorage) {
+					const file = await readFile({
+						path: photo.filepath,
+						directory: FilesystemDirectory.Data,
+					});
+					// Web platform only: Save the photo into the base64 field
+					photo.base64 = `data:image/jpeg;base64,${file.data}`;
+				}
 			}
-			setPhotos(photos);
+			setPhotos(photosInStorage);
 		};
+
 		loadSaved();
 	}, [get, readFile]);
 
+	// On mobile, return the complete file path to the photo using the Filesystem API.
+	// On web webviewPath, use the Capacitor.convertFileSrc method
+	const getPhotoFile = async (
+		cameraPhoto: CameraPhoto,
+		fileName: string,
+	): Promise<Photo> => {
+		if (isPlatform('hybrid')) {
+			// Get the new, complete filepath of the photo saved on filesystem
+			const fileUri = await getUri({
+				directory: FilesystemDirectory.Data,
+				path: fileName,
+			});
+
+			// Display the new image by rewriting the 'file://' path to HTTP
+			// Details: https://ionicframework.com/docs/core-concepts/webview#file-protocol
+			return {
+				filepath: fileUri.uri,
+				webviewPath: Capacitor.convertFileSrc(fileUri.uri),
+			};
+		} else {
+			// Use webPath to display the new image instead of base64 since it's
+			// already loaded into memory
+			return {
+				filepath: fileName,
+				webviewPath: cameraPhoto.webPath,
+			};
+		}
+	};
+
 	// Save photo to File System
 	const savePhoto = async (photo: CameraPhoto, fileName: string) => {
-		const base64Data = await base64FromPath(photo.webPath!);
+		let base64Data: string;
+
+		// "hybrid" will detect Cordova or Capacitor;
+		if (isPlatform('hybrid')) {
+			const file = await readFile({
+				path: photo.path!,
+			});
+			base64Data = file.data;
+			// Web
+		} else {
+			base64Data = await base64FromPath(photo.webPath!);
+		}
+
+		// Write photo to file system
 		await writeFile({
 			path: fileName,
 			data: base64Data,
@@ -73,28 +121,22 @@ export const usePhotoGallery = () => {
 		setPhotos(newPhotos);
 
 		// Save photo data into array each time is taken to persist data even if app close
+		// On web, even though we must read the photo data in base64 format in order
+		// to display it, there’s no need to save in that form
 		set(
 			PHOTO_STORAGE,
-			JSON.stringify(
-				newPhotos.map((p) => {
-					// Don't save the base64 representation of the photo data,
-					// since it's already saved on the Filesystem
-					const photoCopy = { ...p };
-					delete photoCopy.base64;
-					return photoCopy;
-				}),
-			),
+			isPlatform('hybrid')
+				? JSON.stringify(newPhotos)
+				: JSON.stringify(
+						newPhotos.map((p) => {
+							// Don't save the base64 representation of the photo data,
+							// since it's already saved on the Filesystem
+							const photoCopy = { ...p };
+							delete photoCopy.base64;
+							return photoCopy;
+						}),
+				  ),
 		);
-	};
-
-	const getPhotoFile = async (
-		cameraPhoto: CameraPhoto,
-		fileName: string,
-	): Promise<Photo> => {
-		return {
-			filepath: fileName,
-			webviewPath: cameraPhoto.webPath,
-		};
 	};
 
 	return {
