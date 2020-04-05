@@ -1,5 +1,4 @@
 import React from 'react';
-import ExploreContainer from '../components/ExploreContainer';
 import './Gallery.css';
 import { camera, trash, close } from 'ionicons/icons';
 import { usePhotoGallery } from '../hooks/usePhotoGallery';
