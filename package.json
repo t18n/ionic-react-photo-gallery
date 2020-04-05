@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "ionic serve",
+    "dev:web": "ionic serve",
+    "dev:ios": "ionic cap run ios -l --external",
+    "dev:android": "ionic cap run android -l --external",
     "build": "ionic build && ionic cap copy && yarn sync",
-    "ios": "cap open ios",
-    "android": "cap open android",
+    "start:ios": "cap open ios",
+    "start:android": "cap open android",
     "sync": "ionic cap sync"
   },
   "dependencies": {

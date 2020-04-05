@@ -11,6 +11,6 @@ One codebase simple Photo Gallery app that runs on multiple platforms (Web, iOS,
 - Clone the project and cd to project folder
 - Run `yarn install` to install dependencies
 - Run `yarn build` to create build
-- Run `yarn serve` to start the web project
-- Run `yarn ios` to start iOS app (may need to build project from XCode)
-- Run `yarn android` to start iOS app (may need to build project from Android Studio)
+- Run `yarn dev:web` to start the web project with hot reload
+- Run `yarn dev:ios` to start iOS app (may need to build project from XCode) with hot reload
+- Run `yarn dev:android` to start iOS app (may need to build project from Android Studio) with hot reload
