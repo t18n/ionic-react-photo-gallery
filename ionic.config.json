@@ -1,0 +1,7 @@
+{
+  "name": "ionic-react-photo-gallery",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
