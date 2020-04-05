@@ -22,6 +22,7 @@ export interface Photo {
 export const usePhotoGallery = () => {
 	const { getPhoto } = useCamera();
 	const [photos, setPhotos] = useState<Photo[]>([]);
+	const [photoToDelete, setPhotoToDelete] = useState<Photo>();
 	const { deleteFile, getUri, readFile, writeFile } = useFilesystem();
 	const { get, set } = useStorage();
 
@@ -139,8 +140,31 @@ export const usePhotoGallery = () => {
 		);
 	};
 
+	// Delete a photo
+	// The selected photo is removed from the Photos array first
+	// then Capacitor Storage API updates the cached version of the Photos array
+	// Finally, delete the actual photo file itself using the Filesystem API.
+	const deletePhoto = async (photo: Photo) => {
+		// Remove this photo from the Photos reference data array
+		const newPhotos = photos.filter((p) => p.filepath !== photo.filepath);
+
+		// Update photos array cache by overwriting the existing photo array
+		set(PHOTO_STORAGE, JSON.stringify(newPhotos));
+
+		// delete photo file from filesystem
+		const filename = photo.filepath.substr(photo.filepath.lastIndexOf('/') + 1);
+		await deleteFile({
+			path: filename,
+			directory: FilesystemDirectory.Data,
+		});
+		setPhotos(newPhotos);
+	};
+
 	return {
 		photos,
 		takePhoto,
+		deletePhoto,
+		photoToDelete,
+		setPhotoToDelete,
 	};
 };

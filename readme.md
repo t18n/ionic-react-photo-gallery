@@ -1,6 +1,12 @@
 # Ionic React Photo Gallery
 One codebase simple Photo Gallery app that runs on multiple platforms (Web, iOS, Android) using Ionic React
 
+## Features
+- Take a photo
+- Save photo to storage
+- Show a list of taken photo
+- Delete a photo from storage and gallery
+
 ## Prerequisite
 - Node installed
 - Yarn installed

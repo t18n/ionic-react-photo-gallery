@@ -20,7 +20,13 @@ import {
 } from '@ionic/react';
 
 const Gallery: React.FC = () => {
-	const { takePhoto, photos } = usePhotoGallery();
+	const {
+		takePhoto,
+		photos,
+		deletePhoto,
+		photoToDelete,
+		setPhotoToDelete,
+	} = usePhotoGallery();
 
 	return (
 		<IonPage>
@@ -39,7 +45,10 @@ const Gallery: React.FC = () => {
 					<IonRow>
 						{photos.map((photo, index) => (
 							<IonCol size="6" key={index}>
-								<IonImg src={photo.base64 ?? photo.webviewPath} />
+								<IonImg
+									onClick={() => setPhotoToDelete(photo)}
+									src={photo.base64 ?? photo.webviewPath}
+								/>
 							</IonCol>
 						))}
 					</IonRow>
@@ -49,6 +58,28 @@ const Gallery: React.FC = () => {
 						<IonIcon icon={camera}></IonIcon>
 					</IonFabButton>
 				</IonFab>
+				<IonActionSheet
+					isOpen={!!photoToDelete}
+					buttons={[
+						{
+							text: 'Delete',
+							role: 'destructive',
+							icon: trash,
+							handler: () => {
+								if (photoToDelete) {
+									deletePhoto(photoToDelete);
+									setPhotoToDelete(undefined);
+								}
+							},
+						},
+						{
+							text: 'Cancel',
+							icon: close,
+							role: 'cancel',
+						},
+					]}
+					onDidDismiss={() => setPhotoToDelete(undefined)}
+				/>
 			</IonContent>
 		</IonPage>
 	);
